@@ -8,7 +8,7 @@
 
     // If no API key → stop everything
     if (!apiKey || apiKey.trim() === "") {
-        console.warn("[IMDb] No OMDb API key set. Script aborted.");
+        console.warn("[WikIMDb] No OMDb API key set. Script aborted.");
         return;
     }
 
@@ -27,25 +27,25 @@
 
     const wikiLang = location.hostname.split(".")[0];
     const links = [...document.querySelectorAll("a[href^='/wiki/']")];
-    console.trace("[IMDb] Links wiki found :", links.length);
+    console.trace("[WikIMDb] Links wiki found :", links.length);
 
     const imdbRegex = /tt\d{5,9}/i;
 
     async function getIMDbIdForPage(page) {
         if (cache[page]?.tt) {
-            console.trace("[IMDb] TT from cache :", page, cache[page].tt);
+            console.trace("[WikIMDb] TT from cache :", page, cache[page].tt);
             return cache[page].tt;
         }
 
         const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=parse&page=${page}&prop=externallinks&format=json&origin=*`;
-        console.trace("[IMDb] Fetch externallinks :", url);
+        console.trace("[WikIMDb] Fetch externallinks :", url);
 
         try {
             const r = await fetch(url);
             const data = await r.json();
 
             if (!data.parse?.externallinks) {
-                console.trace("[IMDb] No externallinks found for page :", page);
+                console.trace("[WikIMDb] No externallinks found for page :", page);
                 cache[page] = { tt: null };
                 saveCache();
                 return null;
@@ -55,37 +55,37 @@
             for (const l of links) {
                 const tt = l.match(imdbRegex)?.[0];
                 if (tt) {
-                    console.trace("[IMDb] TT detected :", tt, "for page :", page);
+                    console.trace("[WikIMDb] TT detected :", tt, "for page :", page);
                     cache[page] = { tt };
                     saveCache();
                     return tt;
                 }
             }
 
-            console.trace("[IMDb] No TT found in externallinks for page :", page);
+            console.trace("[WikIMDb] No TT found in externallinks for page :", page);
             cache[page] = { tt: null };
             saveCache();
             return null;
 
         } catch (err) {
-            console.warn("[IMDb] WARN fetch externallinks :", page, err);
+            console.warn("[WikIMDb] WARN fetch externallinks :", page, err);
             return null;
         }
     }
 
     async function getRating(tt) {
         if (cache[tt]?.rating) {
-            console.trace("[IMDb] Rating from cache :", tt, cache[tt].rating);
+            console.trace("[WikIMDb] Rating from cache :", tt, cache[tt].rating);
             return cache[tt].rating;
         }
 
         const url = `https://www.omdbapi.com/?apikey=${apiKey}&i=${tt}`;
-        console.trace("[IMDb] Fetch OMDb :", url);
+        console.trace("[WikIMDb] Fetch OMDb :", url);
 
         try {
             const r = await fetch(url, { referrerPolicy: "no-referrer" });
             const data = await r.json();
-            console.trace("[IMDb] OMDb response :", tt, data);
+            console.trace("[WikIMDb] OMDb response :", tt, data);
 
             if (!data.imdbRating || data.imdbRating === "N/A") {
                 cache[tt] = { rating: null };
@@ -99,7 +99,7 @@
 
             return data.imdbRating;
         } catch (err) {
-            console.warn("[IMDb] WARN fetch OMDb :", tt, err);
+            console.warn("[WikIMDb] WARN fetch OMDb :", tt, err);
             return null;
         }
     }
@@ -126,7 +126,7 @@
         if (!rating) return; // ignore N/A
 
         addStar(link, rating);
-        console.trace("[IMDb] ⭐ Rating added :", rating, "to link", link);
+        console.trace("[WikIMDb] ⭐ Rating added :", rating, "to link", link);
     });
 
 })();
