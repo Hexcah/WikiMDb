@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WikiMDB - Settings</title>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 15px; 
+      min-width: 280px; 
+      color: #333;
+    }
+    h3 { 
+      color: #121212; 
+      border-bottom: 2px solid #f5c518; 
+      padding-bottom: 5px; 
+      font-weight: bold;
+    }
+    p { font-size: 0.95em; }
+    label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.95em; }
+    input[type="text"] { 
+      width: 95%; 
+      padding: 8px; 
+      margin-top: 5px; 
+      border: 1px solid #ccc; 
+      border-radius: 4px; 
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    }
+    button { 
+      background-color: #f5c518; 
+      color: #121212; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 4px; 
+      margin-top: 20px; 
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    button:hover { background-color: #e0b414; }
+    #status { margin-top: 10px; font-size: 0.9em; font-style: italic; }
+    .success { color: green; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h3>🔑 OMDb API Key Configuration</h3>
+  <p>Enter your free OMDb API Key to fetch movie ratings. <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" style="color: #007bff;">Get a Key</a></p>
+  
+  <label for="omdbKey">Your OMDb Key:</label>
+  <input type="text" id="omdbKey" placeholder="e.g., a1b2c3d4">
+  
+  <button id="saveButton">Save Key</button>
+  <div id="status"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
