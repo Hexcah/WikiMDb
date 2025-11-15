@@ -27,18 +27,18 @@
 
     const wikiLang = location.hostname.split(".")[0];
     const links = [...document.querySelectorAll("a[href^='/wiki/']")];
-    console.trace("[WikIMDb] Links wiki found :", links.length);
+    // console.log("[WikIMDb] Links wiki found :", links.length);
 
     const imdbRegex = /tt\d{5,9}/i;
 
     async function getIMDbIdForPage(page) {
         if (cache[page]?.tt) {
-            console.trace("[WikIMDb] TT from cache :", page, cache[page].tt);
+            // console.log("[WikIMDb] TT from cache :", page, cache[page].tt);
             return cache[page].tt;
         }
 
         const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=parse&page=${page}&prop=externallinks&format=json&origin=*`;
-        console.trace("[WikIMDb] Fetch externallinks :", url);
+        // console.log("[WikIMDb] Fetch externallinks :", url);
 
         try {
             const r = await fetch(url);
@@ -55,14 +55,14 @@
             for (const l of links) {
                 const tt = l.match(imdbRegex)?.[0];
                 if (tt) {
-                    console.trace("[WikIMDb] TT detected :", tt, "for page :", page);
+                    // console.log("[WikIMDb] TT detected :", tt, "for page :", page);
                     cache[page] = { tt };
                     saveCache();
                     return tt;
                 }
             }
 
-            console.trace("[WikIMDb] No TT found in externallinks for page :", page);
+            // console.log("[WikIMDb] No TT found in externallinks for page :", page);
             cache[page] = { tt: null };
             saveCache();
             return null;
@@ -75,12 +75,12 @@
 
     async function getRating(tt) {
         if (cache[tt]?.rating) {
-            console.trace("[WikIMDb] Rating from cache :", tt, cache[tt].rating);
+            // console.log("[WikIMDb] Rating from cache :", tt, cache[tt].rating);
             return cache[tt].rating;
         }
 
         const url = `https://www.omdbapi.com/?apikey=${apiKey}&i=${tt}`;
-        console.trace("[WikIMDb] Fetch OMDb :", url);
+        // console.log("[WikIMDb] Fetch OMDb :", url);
 
         try {
             const r = await fetch(url, { referrerPolicy: "no-referrer" });
@@ -126,7 +126,7 @@
         if (!rating) return; // ignore N/A
 
         addStar(link, rating);
-        console.trace("[WikIMDb] ⭐ Rating added :", rating, "to link", link);
+        // console.log("[WikIMDb] ⭐ Rating added :", rating, "to link", link);
     });
 
 })();
