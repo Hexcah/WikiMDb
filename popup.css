@@ -88,3 +88,33 @@ button:hover { background-color: #e0b414; }
   color: #121212;
 }
 
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.input-group input[type="text"] {
+  flex: 1;
+  margin-top: 0;
+  width: auto;
+}
+
+.api-link {
+  color: #f5c518;
+  text-decoration: none;
+  font-size: 0.85em;
+  font-weight: bold;
+  padding: 4px 8px;
+  border: 1px solid #f5c518;
+  border-radius: 3px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.api-link:hover {
+  background-color: #f5c518;
+  color: #121212;
+}
+
