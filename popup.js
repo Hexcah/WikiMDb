@@ -1,42 +1,31 @@
-// popup.js
+const storage = globalThis.browser ? browser.storage.local : chrome.storage.local;
 
-// Universal storage API selector for Chrome/Firefox/Edge (WebExtensions compatibility)
-const storageApi = globalThis.browser ? globalThis.browser.storage.local : chrome.storage.local;
+document.getElementById("save").onclick = async () => {
 
-document.addEventListener('DOMContentLoaded', () => {
-    const keyInput = document.getElementById('omdbKey');
-    const saveButton = document.getElementById('saveButton');
-    const statusDiv = document.getElementById('status');
+    const provider = document.querySelector("input[name='provider']:checked")?.value;
 
-    // Load existing key when the popup opens
-    storageApi.get(['omdbApiKey']).then((result) => {
-        if (result.omdbApiKey) {
-            keyInput.value = result.omdbApiKey;
-            statusDiv.textContent = 'Current OMDb Key loaded.';
-        } else {
-            statusDiv.textContent = 'No key found. Please enter your OMDb API key.';
-        }
-    }).catch(error => {
-        console.error("Error loading API key:", error);
-        statusDiv.textContent = 'Error loading settings.';
+    await storage.set({
+        provider: provider || "tmdb",
+        omdbKey: document.getElementById("omdbKey").value.trim(),
+        tmdbKey: document.getElementById("tmdbKey").value.trim()
     });
 
-    // Event listener for the "Save" button
-    saveButton.addEventListener('click', () => {
-        const apiKey = keyInput.value.trim();
-        
-        if (apiKey.length > 5) {
-            // Save the key to the universal storage API
-            storageApi.set({ omdbApiKey: apiKey }).then(() => {
-                statusDiv.className = 'success';
-                statusDiv.textContent = '✅ API Key saved successfully! Reload Wikipedia pages to apply.';
-            }).catch(error => {
-                 console.error("Error saving API key:", error);
-                 statusDiv.textContent = 'Error saving key.';
-            });
-        } else {
-            statusDiv.className = '';
-            statusDiv.textContent = 'Please enter a valid API key (must be longer than 5 characters).';
-        }
-    });
-});
+    const status = document.getElementById("status");
+    status.textContent = "Key Saved";
+    status.className = "success";
+
+    setTimeout(() => window.close(), 700);
+};
+
+(async () => {
+    const cfg = await storage.get(["provider", "omdbKey", "tmdbKey"]);
+
+    if (cfg.provider) {
+        document.querySelector(`input[value="${cfg.provider}"]`).checked = true;
+    } else {
+        document.querySelector(`input[value="tmdb"]`).checked = true; // default recommended
+    }
+
+    if (cfg.omdbKey) document.getElementById("omdbKey").value = cfg.omdbKey;
+    if (cfg.tmdbKey) document.getElementById("tmdbKey").value = cfg.tmdbKey;
+})();
