@@ -16,6 +16,8 @@
     const CACHE_KEY = "wikimd_cache_v1";
     let cache = {};
 
+    let omdbBlocked = false;
+
     try {
         const raw = localStorage.getItem(CACHE_KEY);
         cache = raw ? JSON.parse(raw) : {};
@@ -25,27 +27,63 @@
 
     const saveCache = () => localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
 
+    const MAX_PARALLEL = 10;
+    let running = 0;
+    const queue = [];
+
+    function queuedFetch(url, opts = {}) {
+        return new Promise((resolve, reject) => {
+            queue.push({ url, opts, resolve, reject });
+            runQueue();
+        });
+    }
+
+    function runQueue() {
+        while (running < MAX_PARALLEL && queue.length > 0) {
+            const job = queue.shift();
+            running++;
+            fetch(job.url, job.opts)
+                .then(res => res.text())
+                .then(text => {
+                    running--;
+                    runQueue();
+                    job.resolve(text);
+                })
+                .catch(err => {
+                    running--;
+                    runQueue();
+                    job.reject(err);
+                });
+        }
+    }
+
     const wikiLang = location.hostname.split(".")[0];
     const links = [...document.querySelectorAll("a[href^='/wiki/']")];
-    // console.log("[WikIMDb] Links wiki found :", links.length);
+    console.debug("[WikIMDb] Links wiki found :", links.length);
 
     const imdbRegex = /tt\d{5,9}/i;
 
     async function getIMDbIdForPage(page) {
         if (cache[page]?.tt) {
-            // console.log("[WikIMDb] TT from cache :", page, cache[page].tt);
+            console.debug("[WikIMDb] TT from cache :", page, cache[page].tt);
             return cache[page].tt;
         }
 
         const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=parse&page=${page}&prop=externallinks&format=json&origin=*`;
-        // console.log("[WikIMDb] Fetch externallinks :", url);
+        console.debug("[WikIMDb] Fetch externallinks :", url);
 
         try {
-            const r = await fetch(url);
-            const data = await r.json();
+            const raw = await queuedFetch(url);
+            let data;
+
+            try {
+                data = JSON.parse(raw);
+            } catch (e) {
+                console.warn("[IMDb] Invalid JSON (HTML received) for:", page);
+                return null;
+            }
 
             if (!data.parse?.externallinks) {
-                console.trace("[WikIMDb] No externallinks found for page :", page);
                 cache[page] = { tt: null };
                 saveCache();
                 return null;
@@ -55,14 +93,14 @@
             for (const l of links) {
                 const tt = l.match(imdbRegex)?.[0];
                 if (tt) {
-                    // console.log("[WikIMDb] TT detected :", tt, "for page :", page);
+                    console.debug("[WikIMDb] TT detected :", tt, "for page :", page);
                     cache[page] = { tt };
                     saveCache();
                     return tt;
                 }
             }
 
-            // console.log("[WikIMDb] No TT found in externallinks for page :", page);
+            console.debug("[WikIMDb] No TT found in externallinks for page :", page);
             cache[page] = { tt: null };
             saveCache();
             return null;
@@ -74,18 +112,33 @@
     }
 
     async function getRating(tt) {
+        if (omdbBlocked) return null;
+
         if (cache[tt]?.rating) {
-            // console.log("[WikIMDb] Rating from cache :", tt, cache[tt].rating);
+            console.debug("[WikIMDb] Rating from cache :", tt, cache[tt].rating);
             return cache[tt].rating;
         }
 
         const url = `https://www.omdbapi.com/?apikey=${apiKey}&i=${tt}`;
-        // console.log("[WikIMDb] Fetch OMDb :", url);
+        console.debug("[WikIMDb] Fetch OMDb :", url);
 
         try {
-            const r = await fetch(url, { referrerPolicy: "no-referrer" });
-            const data = await r.json();
-            console.trace("[WikIMDb] OMDb response :", tt, data);
+            const raw = await queuedFetch(url, { referrerPolicy: "no-referrer" });
+            let data;
+
+            try {
+                data = JSON.parse(raw);
+            } catch {
+                console.warn("[IMDb] Invalid JSON from OMDb:", tt);
+                return null;
+            }
+
+            // Detect rate-limit
+            if (data.Response === "False" && data.Error === "Request limit reached!") {
+                console.warn("[WikIMDb] OMDb API rate limit reached. Further requests will be skipped.");
+                omdbBlocked = true;
+                return null;
+            }
 
             if (!data.imdbRating || data.imdbRating === "N/A") {
                 cache[tt] = { rating: null };
@@ -93,11 +146,10 @@
                 return null;
             }
 
-            cache[tt] = cache[tt] || {};
-            cache[tt].rating = data.imdbRating;
+            cache[tt] = { rating: data.imdbRating };
             saveCache();
-
             return data.imdbRating;
+
         } catch (err) {
             console.warn("[WikIMDb] WARN fetch OMDb :", tt, err);
             return null;
@@ -118,7 +170,8 @@
         if (!href || link.dataset.imdbProcessed) return;
         link.dataset.imdbProcessed = "1";
 
-        const page = decodeURIComponent(href.replace("/wiki/", ""));
+        let page = decodeURIComponent(href.split("/wiki/")[1]);
+        page = page.split("#")[0]; // remove fragment
         const tt = await getIMDbIdForPage(page);
         if (!tt) return;
 
@@ -126,7 +179,7 @@
         if (!rating) return; // ignore N/A
 
         addStar(link, rating);
-        // console.log("[WikIMDb] ⭐ Rating added :", rating, "to link", link);
+        console.debug("[WikIMDb] ⭐ Rating added :", rating, "to link", link);
     });
 
 })();
