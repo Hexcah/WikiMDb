@@ -20,7 +20,7 @@
     }
 
     // CACHE
-    const CACHE_KEY = "wikimdb_cache_v_0_3_0";
+    const CACHE_KEY = "wikimdb_cache_v_0_4_1";
     let cache = {};
 
     try {
@@ -31,7 +31,7 @@
     const saveCache = () => localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
 
     // REQUEST QUEUE (ANTI-FLOOD)
-    const MAX_PARALLEL = 5;
+    const MAX_PARALLEL = 20;
     let running = 0;
     const queue = [];
 
@@ -72,9 +72,38 @@
     const imdbRegex = /tt\d{5,9}/i;
     const tmdbRegex = /themoviedb\.org\/(?:movie|tv)\/(\d+)/i;
 
+    // BLACKLIST - Load from external file
+    let blacklistPatterns = [];
+    
+    // Load blacklist patterns from JSON file
+    async function loadBlacklist() {
+        try {
+            const response = await fetch(chrome.runtime.getURL('blacklist.json'));
+            const blacklistData = await response.json();
+            blacklistPatterns = blacklistData.patterns.map(pattern => new RegExp(pattern, 'i'));
+            console.log("[WikIMDb] Loaded", blacklistPatterns.length, "blacklist patterns");
+        } catch (error) {
+            console.warn("[WikIMDb] Failed to load blacklist:", error);
+        }
+    }
+
+    // Check if a page should be skipped based on blacklist
+    function isBlacklisted(page) {
+        return blacklistPatterns.some(pattern => pattern.test(page));
+    }
+
+    // Load blacklist at startup
+    await loadBlacklist();
+
     // WIKIPEDIA API
     async function getMovieIdForPage(page) {
         page = page.split("#")[0]; // strip anchors
+
+        // Check blacklist first - avoid API calls for known non-movie pages
+        if (isBlacklisted(page)) {
+            console.log("[WikIMDb] Skipping blacklisted page:", page);
+            return null;
+        }
 
         const key = provider === "omdb" ? "tt" : "tmdbId";
         if (cache[page]?.[key]) return cache[page][key];
@@ -281,23 +310,39 @@
         // Skip links that point to the current page
         if (page === currentPage) return;
         
+        // Skip blacklisted pages early
+        if (isBlacklisted(page)) return;
+        
         if (!linksByPage.has(page)) {
             linksByPage.set(page, []);
         }
         linksByPage.get(page).push(link);
     });
 
-    // Process each unique page once and apply rating to all its links
-    for (const [page, pageLinks] of linksByPage) {
+    // Process each unique page independently and show results immediately
+    Array.from(linksByPage.entries()).forEach(([page, pageLinks]) => {
+        // Mark all links as processed to avoid reprocessing
         pageLinks.forEach(link => link.dataset.imdbProcessed = "1");
 
-        const id = await getMovieIdForPage(page);
-        if (!id) continue;
+        // Process each page asynchronously without waiting for others
+        (async () => {
+            try {
+                // Get movie ID from Wikipedia API
+                const id = await getMovieIdForPage(page);
+                if (!id) return;
 
-        const rating = await getRating(id);
-        if (!rating) continue;
+                // Get rating from OMDb/TMDb API and immediately display
+                const rating = await getRating(id);
+                if (!rating) return;
 
-        pageLinks.forEach(link => addStar(link, rating));
-    }
+                // Apply rating to all links for this page as soon as it's available
+                pageLinks.forEach(link => addStar(link, rating));
+                
+                console.log(`[WikIMDb] ⭐ Added rating ${rating} to ${pageLinks.length} link(s) for: ${page}`);
+            } catch (error) {
+                console.warn("[WikIMDb] Error processing page:", page, error);
+            }
+        })();
+    });
 
 })();

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WikIMDb",
   "description": "Adds IMDb ratings next to movie links on Wikipedia pages.",
-  "version": "0.3.0",
+  "version": "0.4.1",
 
   "icons": {
     "16": "icons/icon16.png",
@@ -26,6 +26,13 @@
     "*://*.wikipedia.org/*",
     "https://www.omdbapi.com/*",
     "https://themoviedb.org/*"
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["blacklist.json"],
+      "matches": ["*://*.wikipedia.org/*"]
+    }
   ],
 
   "action": {
