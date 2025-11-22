@@ -10,12 +10,12 @@
     const tmdbKey  = cfg.tmdbKey || "";
 
     if (provider === "omdb" && !omdbKey) {
-        console.warn("[WikIMDb] No OMDb key → aborted.");
+        console.warn("[WikIMDb] No OMDb key");
         return;
     }
 
     if (provider === "tmdb" && !tmdbKey) {
-        console.warn("[WikIMDb] No TMDb key → aborted.");
+        console.warn("[WikIMDb] No TMDb key");
         return;
     }
 
@@ -31,7 +31,7 @@
     const saveCache = () => localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
 
     // REQUEST QUEUE (ANTI-FLOOD)
-    const MAX_PARALLEL = 5;
+    const MAX_PARALLEL = 10;
     let running = 0;
     const queue = [];
 
@@ -154,7 +154,7 @@
         }
 
         if (data?.Error === "Request limit reached!") {
-            console.warn("[WikIMDb] OMDb quota reached → blocking");
+            console.warn("[WikIMDb] OMDb quota reached");
             omdbBlocked = true;
             return null;
         }
@@ -191,7 +191,7 @@
         }
 
         if (data?.status_code === 429) {
-            console.warn("[WikIMDb] TMDb rate-limit 429 → blocking");
+            console.warn("[WikIMDb] TMDb rate-limit 429");
             tmdbBlocked = true;
             return null;
         }
@@ -230,7 +230,7 @@
         span.style.fontSize = "0.8em";
         span.style.opacity = "0.85";
         span.style.color = "#F6C700";
-        span.textContent = `⭐ ${rating}`;
+        span.textContent = `${rating}⭐`;
         link.appendChild(span);
     }
 
@@ -245,7 +245,7 @@
         span.style.opacity = "0.85";
         span.style.color = "#F6C700";
         span.style.fontWeight = "normal";
-        span.textContent = `⭐ ${rating}`;
+        span.textContent = `${rating}⭐`;
         element.appendChild(span);
     }
 
