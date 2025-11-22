@@ -20,7 +20,7 @@
     }
 
     // CACHE
-    const CACHE_KEY = "wikimdb_cache_v_0_2_0";
+    const CACHE_KEY = "wikimdb_cache_v_0_3_0";
     let cache = {};
 
     try {
@@ -31,7 +31,7 @@
     const saveCache = () => localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
 
     // REQUEST QUEUE (ANTI-FLOOD)
-    const MAX_PARALLEL = 10;
+    const MAX_PARALLEL = 5;
     let running = 0;
     const queue = [];
 
@@ -208,7 +208,9 @@
 
     // SELECT PROVIDER
     async function getRating(id) {
-        if (cache[id]?.rating) return cache[id].rating;
+        const ratingKey = `rating_${typeof id === 'object' ? `${id.type}_${id.id}` : id}`;
+        
+        if (cache[ratingKey]) return cache[ratingKey];
 
         let rating = null;
 
@@ -218,7 +220,7 @@
             rating = await fetchTMDb(id);
         }
 
-        cache[id] = { rating: rating || null };
+        cache[ratingKey] = rating || null;
         saveCache();
         return rating;
     }
@@ -268,24 +270,34 @@
     // Execute for current page title
     addRatingToCurrentPage();
 
-    // MAIN LOOP - for other links
-    links.forEach(async (link) => {
+    // MAIN LOOP
+    const linksByPage = new Map();
+    links.forEach((link) => {
         const href = link.getAttribute("href");
         if (!href || link.dataset.imdbProcessed) return;
-        link.dataset.imdbProcessed = "1";
-
+        
         let page = decodeURIComponent(href.replace("/wiki/", "")).split("#")[0];
         
         // Skip links that point to the current page
         if (page === currentPage) return;
+        
+        if (!linksByPage.has(page)) {
+            linksByPage.set(page, []);
+        }
+        linksByPage.get(page).push(link);
+    });
+
+    // Process each unique page once and apply rating to all its links
+    for (const [page, pageLinks] of linksByPage) {
+        pageLinks.forEach(link => link.dataset.imdbProcessed = "1");
 
         const id = await getMovieIdForPage(page);
-        if (!id) return;
+        if (!id) continue;
 
         const rating = await getRating(id);
-        if (!rating) return;
+        if (!rating) continue;
 
-        addStar(link, rating);
-    });
+        pageLinks.forEach(link => addStar(link, rating));
+    }
 
 })();
