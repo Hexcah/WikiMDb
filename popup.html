@@ -7,29 +7,38 @@
 </head>
 <body>
 
-<h3>Data Provider</h3>
-
-<div class="provider-toggle">
-  <label class="toggle-option">
-    <input type="radio" name="provider" value="tmdb">
-    <span>TMDB (recommended)</span>
-  </label>
-  <label class="toggle-option">
-    <input type="radio" name="provider" value="omdb">
-    <span>OMDb (IMDb)</span>
-  </label>
-</div>
+<h3>API Configuration</h3>
 
 <label for="tmdbKey">TMDB API Token:</label>
 <div class="input-group">
-  <input type="text" id="tmdbKey" placeholder="Enter tmdb API read access token">
+  <input type="text" id="tmdbKey" placeholder="Enter TMDB API read access token">
   <a href="https://www.themoviedb.org/settings/api" target="_blank" class="api-link">Get API Key</a>
 </div>
 
-<label for="omdbKey">OMDb API Key:</label>
-<div class="input-group">
-  <input type="text" id="omdbKey" placeholder="Enter OMDb API Key">
-  <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" class="api-link">Get API Key</a>
+<h3>Content Types</h3>
+<p class="description">Select which content types to display ratings for:</p>
+
+<div class="content-types">
+  <label class="checkbox-label">
+    <input type="checkbox" id="showMovies" checked>
+    <span>Movies</span>
+  </label>
+  <label class="checkbox-label">
+    <input type="checkbox" id="showTV" checked>
+    <span>TV Shows</span>
+  </label>
+  <label class="checkbox-label">
+    <input type="checkbox" id="showSeasons">
+    <span>TV Seasons</span>
+  </label>
+  <label class="checkbox-label">
+    <input type="checkbox" id="showEpisodes">
+    <span>TV Episodes</span>
+  </label>
+  <label class="checkbox-label">
+    <input type="checkbox" id="showPeople">
+    <span>People</span>
+  </label>
 </div>
 
 <button id="save">Save</button>

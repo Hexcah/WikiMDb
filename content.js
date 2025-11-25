@@ -3,19 +3,21 @@
 
     // === STORAGE + USER SETTINGS ===
     const storageApi = globalThis.browser ? globalThis.browser.storage.local : chrome.storage.local;
-    const cfg = await storageApi.get(["provider", "omdbKey", "tmdbKey"]);
+    const cfg = await storageApi.get([
+        "tmdbKey", "showMovies", "showTV", "showSeasons", "showEpisodes", "showPeople"
+    ]);
 
-    const provider = cfg.provider || "omdb";
-    const omdbKey  = cfg.omdbKey || "";
-    const tmdbKey  = cfg.tmdbKey || "";
+    const tmdbKey = cfg.tmdbKey || "";
+    const contentPrefs = {
+        movies: cfg.showMovies !== false,
+        tv: cfg.showTV !== false,
+        seasons: cfg.showSeasons === true,
+        episodes: cfg.showEpisodes === true,
+        people: cfg.showPeople === true
+    };
 
-    if (provider === "omdb" && !omdbKey) {
-        console.warn("[WikIMDb] No OMDb key");
-        return;
-    }
-
-    if (provider === "tmdb" && !tmdbKey) {
-        console.warn("[WikIMDb] No TMDb key");
+    if (!tmdbKey) {
+        console.warn("[WikIMDb] No TMDb key configured");
         return;
     }
 
@@ -66,9 +68,6 @@
     const wikiLang = location.hostname.split(".")[0];
     const links = [...document.querySelectorAll("a[href^='/wiki/']")];
 
-    let omdbBlocked = false;
-    let tmdbBlocked = false;
-
     // === BLACKLIST SYSTEM ===
     let blacklistPatterns = [];
     
@@ -113,7 +112,8 @@
             const raw = await queuedFetch(url);
             const data = JSON.parse(raw);
             
-            if (data.movie_results?.[0]) {
+            // Check for movies
+            if (data.movie_results?.[0] && contentPrefs.movies) {
                 const movie = data.movie_results[0];
                 return { 
                     id: movie.id, 
@@ -122,7 +122,8 @@
                 };
             }
             
-            if (data.tv_results?.[0]) {
+            // Check for TV shows
+            if (data.tv_results?.[0] && contentPrefs.tv) {
                 const tv = data.tv_results[0];
                 return { 
                     id: tv.id, 
@@ -130,116 +131,75 @@
                     rating: tv.vote_average ? tv.vote_average.toFixed(1) : null
                 };
             }
+
+            // Check for TV seasons
+            if (data.tv_season_results?.[0] && contentPrefs.seasons) {
+                const season = data.tv_season_results[0];
+                return { 
+                    id: season.id, 
+                    type: 'season',
+                    rating: season.vote_average ? season.vote_average.toFixed(1) : null
+                };
+            }
+
+            // Check for TV episodes
+            if (data.tv_episode_results?.[0] && contentPrefs.episodes) {
+                const episode = data.tv_episode_results[0];
+                return { 
+                    id: episode.id, 
+                    type: 'episode',
+                    rating: episode.vote_average ? episode.vote_average.toFixed(1) : null
+                };
+            }
+
+            // Check for people
+            if (data.person_results?.[0] && contentPrefs.people) {
+                const person = data.person_results[0];
+                return { 
+                    id: person.id, 
+                    type: 'person',
+                    rating: person.popularity ? (person.popularity / 10).toFixed(1) : null
+                };
+            }
             
             return null;
         } catch (error) {
-            console.warn("[WikIMDb] Failed to get TMDb ID via find API:", wikidataId);
+            console.warn("[WikIMDb] Failed to get TMDb data:", error);
             return null;
         }
     }
 
-    // === MOVIE ID DETECTION ===
-    async function getMovieIdForPage(page) {
-        page = page.split("#")[0]; // strip anchors
-
+    // === CONTENT ID DETECTION ===
+    async function getContentIdForPage(page) {
+        page = page.split("#")[0];
         if (isBlacklisted(page)) return null;
 
-        const key = provider === "omdb" ? "tt" : "tmdbId";
-        if (cache[page]?.[key]) return cache[page][key];
+        if (cache[page]?.tmdbId) return cache[page].tmdbId;
 
-        // For TMDb, use Wikidata
-        if (provider === "tmdb") {
-            const wikidataId = await getWikidataItem(page);
-            if (wikidataId) {
-                const tmdbData = await getTMDbFromWikidata(wikidataId);
-                if (tmdbData && tmdbData.rating) {
-                    // Cache both the ID data and the rating
-                    cache[page] = { tmdbId: tmdbData };
-                    const ratingKey = `rating_${tmdbData.type}_${tmdbData.id}`;
-                    cache[ratingKey] = tmdbData.rating;
-                    saveCache();
-                    return tmdbData;
-                }
-            }
+        const wikidataId = await getWikidataItem(page);
+        if (!wikidataId) {
             cache[page] = { tmdbId: null };
             saveCache();
             return null;
         }
 
-        // For OMDb, use external links method
-        const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(page)}&prop=externallinks&redirects=1&format=json&origin=*`;
-
-        let raw;
-        try {
-            raw = await queuedFetch(url);
-        } catch (error) {
-            console.warn("[WikIMDb] Wikipedia fetch failed for:", page);
-            return null;
+        const tmdbData = await getTMDbFromWikidata(wikidataId);
+        if (tmdbData && tmdbData.rating) {
+            cache[page] = { tmdbId: tmdbData };
+            const ratingKey = `rating_${tmdbData.type}_${tmdbData.id}`;
+            cache[ratingKey] = tmdbData.rating;
+            saveCache();
+            return tmdbData;
         }
 
-        let data;
-        try {
-            data = JSON.parse(raw);
-            if (data.error || !data.parse) return null;
-        } catch {
-            console.warn("[WikIMDb] Wikipedia returned HTML instead of JSON:", page);
-            return null;
-        }
-
-        const ex = data.parse?.externallinks || [];
-
-        for (const l of ex) {
-            const tt = l.match(/tt\d{5,9}/i)?.[0];
-            if (tt) {
-                cache[page] = { tt };
-                saveCache();
-                return tt;
-            }
-        }
-
-        cache[page] = { tt: null };
+        cache[page] = { tmdbId: null };
         saveCache();
         return null;
     }
 
-    // === OMDb API ===
-    async function fetchOMDb(tt) {
-        if (omdbBlocked) return null;
-
-        try {
-            const raw = await queuedFetch(`https://www.omdbapi.com/?apikey=${omdbKey}&i=${tt}`);
-            const data = JSON.parse(raw);
-            
-            if (data?.Error === "Request limit reached!") {
-                console.warn("[WikIMDb] OMDb quota reached");
-                omdbBlocked = true;
-                return null;
-            }
-            
-            return data.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : null;
-        } catch {
-            console.warn("[WikIMDb] OMDb fetch failed");
-            return null;
-        }
-    }
-
     // === RATING PROVIDER ===
-    async function getRating(id) {
-        if (provider === "tmdb" && typeof id === 'object' && id.rating) {
-            return id.rating;
-        }
-
-        if (provider === "omdb") {
-            const ratingKey = `rating_${id}`;
-            if (cache[ratingKey]) return cache[ratingKey];
-
-            const rating = await fetchOMDb(id);
-            cache[ratingKey] = rating || null;
-            saveCache();
-            return rating;
-        }
-
-        return null;
+    async function getRating(data) {
+        return (typeof data === 'object' && data.rating) ? data.rating : null;
     }
 
     // === UI HELPERS ===
@@ -267,9 +227,9 @@
         if (!titleElement || titleElement.dataset.imdbProcessed) return;
         
         titleElement.dataset.imdbProcessed = "1";
-        const id = await getMovieIdForPage(currentPage);
-        if (id) {
-            const rating = await getRating(id);
+        const data = await getContentIdForPage(currentPage);
+        if (data) {
+            const rating = await getRating(data);
             if (rating) addStarToTitle(titleElement, rating);
         }
     };
@@ -299,21 +259,17 @@
 
     // Process each unique page asynchronously
     Array.from(linksByPage.entries()).forEach(([page, pageLinks]) => {
-        // Mark all links as processed to avoid reprocessing
         pageLinks.forEach(link => link.dataset.imdbProcessed = "1");
 
-        // Process each page asynchronously without waiting for others
         (async () => {
             try {
-                const id = await getMovieIdForPage(page);
-                if (!id) return;
+                const data = await getContentIdForPage(page);
+                if (!data) return;
                 
-                const rating = await getRating(id);
+                const rating = await getRating(data);
                 if (!rating) return;
                 
-                // Apply rating to all links for this page as soon as it's available
                 pageLinks.forEach(link => addStar(link, rating));
-                
             } catch (error) {
                 console.warn("[WikIMDb] Error processing page:", page);
             }

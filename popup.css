@@ -1,7 +1,7 @@
 body { 
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 15px; 
-  min-width: 280px; 
+  min-width: 300px; 
   color: #333;
 }
 
@@ -10,6 +10,11 @@ h3 {
   border-bottom: 2px solid #f5c518; 
   padding-bottom: 5px; 
   font-weight: bold;
+  margin-top: 15px;
+}
+
+h3:first-of-type {
+  margin-top: 0;
 }
 
 label { 
@@ -17,6 +22,12 @@ label {
   margin-top: 15px; 
   font-weight: bold; 
   font-size: 0.95em; 
+}
+
+.description {
+  margin: 8px 0;
+  font-size: 0.85em;
+  color: #666;
 }
 
 input[type="text"] { 
@@ -38,6 +49,7 @@ button {
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.2s;
+  width: 100%;
 }
 button:hover { background-color: #e0b414; }
 
@@ -45,47 +57,12 @@ button:hover { background-color: #e0b414; }
   margin-top: 10px; 
   font-size: 0.9em; 
   font-style: italic; 
+  text-align: center;
 }
 
 .success { 
   color: green; 
   font-weight: bold; 
-}
-
-.provider-toggle {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.toggle-option {
-  flex: 1;
-  text-align: center;
-  border: 1px solid #ccc;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.15s;
-}
-
-.toggle-option input {
-  display: none;
-}
-
-.toggle-option span {
-  font-size: 0.9em;
-  font-weight: bold;
-}
-
-.toggle-option:has(input:checked) {
-  background-color: #f5c518;
-  color: #121212;
-  border-color: #f5c518;
-}
-
-.toggle-option input:checked + span {
-  color: #121212;
 }
 
 .input-group {
@@ -116,5 +93,40 @@ button:hover { background-color: #e0b414; }
 .api-link:hover {
   background-color: #f5c518;
   color: #121212;
+}
+
+.content-types {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: normal;
+  margin: 0;
+}
+
+.checkbox-label:hover {
+  background-color: #f9f9f9;
+  border-color: #f5c518;
+}
+
+.checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-label span {
+  font-size: 0.9em;
 }
 

@@ -1,31 +1,31 @@
 const storage = globalThis.browser ? browser.storage.local : chrome.storage.local;
 
 document.getElementById("save").onclick = async () => {
-
-    const provider = document.querySelector("input[name='provider']:checked")?.value;
-
     await storage.set({
-        provider: provider || "tmdb",
-        omdbKey: document.getElementById("omdbKey").value.trim(),
-        tmdbKey: document.getElementById("tmdbKey").value.trim()
+        tmdbKey: document.getElementById("tmdbKey").value.trim(),
+        showMovies: document.getElementById("showMovies").checked,
+        showTV: document.getElementById("showTV").checked,
+        showSeasons: document.getElementById("showSeasons").checked,
+        showEpisodes: document.getElementById("showEpisodes").checked,
+        showPeople: document.getElementById("showPeople").checked
     });
 
     const status = document.getElementById("status");
-    status.textContent = "Key Saved";
+    status.textContent = "Settings Saved";
     status.className = "success";
 
     setTimeout(() => window.close(), 700);
 };
 
 (async () => {
-    const cfg = await storage.get(["provider", "omdbKey", "tmdbKey"]);
+    const cfg = await storage.get(["tmdbKey", "showMovies", "showTV", "showSeasons", "showEpisodes", "showPeople"]);
 
-    if (cfg.provider) {
-        document.querySelector(`input[value="${cfg.provider}"]`).checked = true;
-    } else {
-        document.querySelector(`input[value="tmdb"]`).checked = true; // default recommended
-    }
-
-    if (cfg.omdbKey) document.getElementById("omdbKey").value = cfg.omdbKey;
     if (cfg.tmdbKey) document.getElementById("tmdbKey").value = cfg.tmdbKey;
+    
+    // Set checkboxes (default: only movies and TV shows)
+    document.getElementById("showMovies").checked = cfg.showMovies !== false;
+    document.getElementById("showTV").checked = cfg.showTV !== false;
+    document.getElementById("showSeasons").checked = cfg.showSeasons === true;
+    document.getElementById("showEpisodes").checked = cfg.showEpisodes === true;
+    document.getElementById("showPeople").checked = cfg.showPeople === true;
 })();

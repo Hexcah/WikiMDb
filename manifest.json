@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "WikIMDb",
-  "description": "Adds IMDb ratings next to movie links on Wikipedia pages.",
-  "version": "0.7.0",
+  "description": "Adds TMDb ratings next to movie, TV show, and people links on Wikipedia pages.",
+  "version": "0.8.0",
 
   "icons": {
     "16": "icons/icon16.png",
@@ -25,7 +25,6 @@
   "host_permissions": [
     "*://*.wikipedia.org/*",
     "https://www.wikidata.org/*",
-    "https://www.omdbapi.com/*",
     "https://api.themoviedb.org/*"
   ],
 
