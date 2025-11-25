@@ -81,7 +81,7 @@
             const response = await fetch(chrome.runtime.getURL('blacklist.json'));
             const blacklistData = await response.json();
             blacklistPatterns = blacklistData.patterns.map(pattern => new RegExp(pattern, 'i'));
-            console.log("[WikIMDb] Loaded", blacklistPatterns.length, "blacklist patterns");
+            console.debug("[WikIMDb] Loaded", blacklistPatterns.length, "blacklist patterns");
         } catch (error) {
             console.warn("[WikIMDb] Failed to load blacklist:", error);
         }
@@ -101,7 +101,7 @@
 
         // Check blacklist first - avoid API calls for known non-movie pages
         if (isBlacklisted(page)) {
-            console.log("[WikIMDb] Skipping blacklisted page:", page);
+            console.debug("[WikIMDb] Skipping blacklisted page:", page);
             return null;
         }
 
@@ -338,7 +338,7 @@
                 // Apply rating to all links for this page as soon as it's available
                 pageLinks.forEach(link => addStar(link, rating));
                 
-                console.log(`[WikIMDb] ⭐ Added rating ${rating} to ${pageLinks.length} link(s) for: ${page}`);
+                console.debug(`[WikIMDb] ⭐ Added rating ${rating} to ${pageLinks.length} link(s) for: ${page}`);
             } catch (error) {
                 console.warn("[WikIMDb] Error processing page:", page, error);
             }
