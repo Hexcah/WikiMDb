@@ -20,7 +20,7 @@
     }
 
     // CACHE
-    const CACHE_KEY = "wikimdb_cache_v_0_4_1";
+    const CACHE_KEY = "wikimdb_cache_v_0_5_0";
     let cache = {};
 
     try {
@@ -275,7 +275,6 @@
         span.style.fontSize = "0.7em";
         span.style.opacity = "0.85";
         span.style.color = "#F6C700";
-        span.style.fontWeight = "normal";
         span.textContent = `${rating}⭐`;
         element.appendChild(span);
     }
