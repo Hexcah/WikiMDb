@@ -26,6 +26,8 @@
     "^\\d{4}$",
     "^\\d{4}_in_",
     "^\\d{4}_en_",
+    "^Cine_en_\\d{4}",
+    "^\\d{4}_no_",
     "^List_of_",
     "^Liste_",
     "_(disambiguation)$",
