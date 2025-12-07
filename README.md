@@ -5,13 +5,13 @@
   
   **Instantly see movie and TV show ratings on Wikipedia!**
   
-  [![Chrome Web Store](https://img.shields.io/badge/Chrome-Install-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chrome.google.com/webstore/detail/wikimdb)
-  [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Install-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://addons.mozilla.org/firefox/addon/wikimdb)
-  [![Edge Add-ons](https://img.shields.io/badge/Edge-Install-0078D4?style=for-the-badge&logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/wikimdb)
+  <!-- TODO: add live store badges when published -->
+  ![Chrome Web Store](https://img.shields.io/badge/Chrome-Install-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)
+  ![Firefox Add-ons](https://img.shields.io/badge/Firefox-Install-FF7139?style=for-the-badge&logo=firefox&logoColor=white)
+  ![Edge Add-ons](https://img.shields.io/badge/Edge-Install-0078D4?style=for-the-badge&logo=microsoftedge&logoColor=white)
   
   ![Version](https://img.shields.io/badge/version-0.3.0-brightgreen)
   ![License](https://img.shields.io/badge/license-MIT-blue)
-  ![Users](https://img.shields.io/badge/users-1K+-success)
 </div>
 
 ## ✨ What is WikIMDb?
@@ -37,19 +37,13 @@ WikIMDb is a lightweight browser extension that automatically adds **IMDb rating
 ## 🚀 Installation
 
 ### Chrome Web Store
-1. Visit the [Chrome Web Store](https://chrome.google.com/webstore/detail/wikimdb)
-2. Click "Add to Chrome"
-3. Confirm the installation
+- TODO
 
 ### Firefox Add-ons
-1. Visit [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/wikimdb)
-2. Click "Add to Firefox"
-3. Confirm the installation
+- TODO
 
 ### Microsoft Edge
-1. Visit [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/wikimdb)
-2. Click "Get"
-3. Confirm the installation
+- TODO
 
 ## ⚙️ Setup
 
@@ -66,23 +60,6 @@ WikIMDb is a lightweight browser extension that automatically adds **IMDb rating
 3. **Start Browsing**:
    - Visit any Wikipedia movie or TV show page
    - Watch ratings appear automatically! ⭐
-
-## 🎯 How It Works
-
-```mermaid
-graph LR
-    A[Wikipedia Page] --> B[Scan Links]
-    B --> C[Filter Non-Movies]
-    C --> D[Get Movie IDs]
-    D --> E[Fetch Ratings]
-    E --> F[Display Stars ⭐]
-```
-
-1. **Smart Scanning**: Identifies movie/TV links on Wikipedia pages
-2. **Intelligent Filtering**: Skips categories, templates, user pages, etc.
-3. **API Integration**: Fetches ratings from OMDb or TMDb
-4. **Progressive Display**: Shows ratings as they load
-5. **Caching**: Remembers ratings for faster future loads
 
 ## 🔧 Features in Detail
 
