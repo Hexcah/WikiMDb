@@ -4,7 +4,7 @@
     // === STORAGE + USER SETTINGS ===
     const storageApi = globalThis.browser ? globalThis.browser.storage.local : chrome.storage.local;
     const cfg = await storageApi.get([
-        "tmdbKey", "showMovies", "showTV", "showSeasons", "showEpisodes", "showPeople"
+        "tmdbKey", "showMovies", "showTV", "showSeasons", "showEpisodes"
     ]);
 
     const tmdbKey = cfg.tmdbKey || "";
@@ -12,8 +12,7 @@
         movies: cfg.showMovies !== false,
         tv: cfg.showTV !== false,
         seasons: cfg.showSeasons === true,
-        episodes: cfg.showEpisodes === true,
-        people: cfg.showPeople === true
+        episodes: cfg.showEpisodes === true
     };
 
     if (!tmdbKey) {
@@ -22,7 +21,7 @@
     }
 
     // === CACHE SYSTEM ===
-    const CACHE_KEY = "wikimdb_cache_v_0_7_0";
+    const CACHE_KEY = "wikimdb_cache_v_0_8_1";
     let cache = {};
 
     try {
@@ -152,16 +151,6 @@
                 };
             }
 
-            // Check for people
-            if (data.person_results?.[0] && contentPrefs.people) {
-                const person = data.person_results[0];
-                return { 
-                    id: person.id, 
-                    type: 'person',
-                    rating: person.popularity ? (person.popularity / 10).toFixed(1) : null
-                };
-            }
-            
             return null;
         } catch (error) {
             console.warn("[WikIMDb] Failed to get TMDb data:", error);

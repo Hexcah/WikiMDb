@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WikIMDb",
   "description": "Adds TMDb ratings next to movie, TV show, and people links on Wikipedia pages.",
-  "version": "0.8.0",
+  "version": "0.8.1",
 
   "icons": {
     "16": "icons/icon16.png",

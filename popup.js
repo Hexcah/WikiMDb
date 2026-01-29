@@ -6,8 +6,7 @@ document.getElementById("save").onclick = async () => {
         showMovies: document.getElementById("showMovies").checked,
         showTV: document.getElementById("showTV").checked,
         showSeasons: document.getElementById("showSeasons").checked,
-        showEpisodes: document.getElementById("showEpisodes").checked,
-        showPeople: document.getElementById("showPeople").checked
+        showEpisodes: document.getElementById("showEpisodes").checked
     });
 
     const status = document.getElementById("status");
@@ -18,7 +17,7 @@ document.getElementById("save").onclick = async () => {
 };
 
 (async () => {
-    const cfg = await storage.get(["tmdbKey", "showMovies", "showTV", "showSeasons", "showEpisodes", "showPeople"]);
+    const cfg = await storage.get(["tmdbKey", "showMovies", "showTV", "showSeasons", "showEpisodes"]);
 
     if (cfg.tmdbKey) document.getElementById("tmdbKey").value = cfg.tmdbKey;
     
@@ -27,5 +26,4 @@ document.getElementById("save").onclick = async () => {
     document.getElementById("showTV").checked = cfg.showTV !== false;
     document.getElementById("showSeasons").checked = cfg.showSeasons === true;
     document.getElementById("showEpisodes").checked = cfg.showEpisodes === true;
-    document.getElementById("showPeople").checked = cfg.showPeople === true;
 })();
