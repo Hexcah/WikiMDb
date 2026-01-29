@@ -21,7 +21,7 @@
     }
 
     // === CACHE SYSTEM ===
-    const CACHE_KEY = "wikimdb_cache_v_0_8_2";
+    const CACHE_KEY = "wikimdb_cache_v_0_8_3";
     let cache = {};
 
     try {
@@ -82,16 +82,16 @@
     }
 
     // Check if a page should be skipped based on blacklist
-    function isBlacklisted(page) {
-        return blacklistPatterns.some(pattern => pattern.test(page));
+    function isBlacklisted(pageTitle) {
+        return blacklistPatterns.some(pattern => pattern.test(pageTitle));
     }
 
     // Load blacklist at startup
     await loadBlacklist();
 
     // === WIKIDATA API ===
-    async function getWikidataItem(page) {
-        const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(page)}&prop=pageprops&redirects=1&format=json&origin=*`;
+    async function getWikidataItem(pageTitle) {
+        const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(pageTitle)}&prop=pageprops&redirects=1&format=json&origin=*`;
         
         try {
             const raw = await queuedFetch(url);
@@ -100,7 +100,7 @@
             const pageData = pages ? Object.values(pages)[0] : null;
             return pageData?.pageprops?.wikibase_item || null;
         } catch (error) {
-            console.warn("[WikIMDb] Failed to get Wikidata item for:", page);
+            console.warn("[WikIMDb] Failed to get Wikidata item for:", pageTitle);
             return null;
         }
     }
@@ -159,36 +159,36 @@
     }
 
     // === CONTENT ID DETECTION ===
-    async function getContentIdForPage(page) {
-        page = page.split("#")[0];
-        if (isBlacklisted(page)) return null;
+    async function getContentDataForPageTitle(pageTitle) {
+        pageTitle = pageTitle.split("#")[0];
+        if (isBlacklisted(pageTitle)) return null;
 
-        if (cache[page]?.tmdbId) return cache[page].tmdbId;
+        if (cache[pageTitle]?.tmdbId) return cache[pageTitle].tmdbId;
 
-        const wikidataId = await getWikidataItem(page);
+        const wikidataId = await getWikidataItem(pageTitle);
         if (!wikidataId) {
-            cache[page] = { tmdbId: null };
+            cache[pageTitle] = { tmdbId: null };
             saveCache();
             return null;
         }
 
         const tmdbData = await getTMDbFromWikidata(wikidataId);
         if (tmdbData && tmdbData.rating) {
-            cache[page] = { tmdbId: tmdbData };
+            cache[pageTitle] = { tmdbId: tmdbData };
             const ratingKey = `rating_${tmdbData.type}_${tmdbData.id}`;
             cache[ratingKey] = tmdbData.rating;
             saveCache();
             return tmdbData;
         }
 
-        cache[page] = { tmdbId: null };
+        cache[pageTitle] = { tmdbId: null };
         saveCache();
         return null;
     }
 
     // === RATING PROVIDER ===
-    async function getRating(data) {
-        return (typeof data === 'object' && data.rating) ? data.rating : null;
+    async function getRating(tmdbData) {
+        return (typeof tmdbData === 'object' && tmdbData.rating) ? tmdbData.rating : null;
     }
 
     // === UI HELPERS ===
@@ -208,7 +208,7 @@
     const addStarToTitle = (element, rating) => element.appendChild(createStar(rating, true));
 
     // === CURRENT PAGE PROCESSING ===
-    const currentPage = decodeURIComponent(location.pathname.replace("/wiki/", "")).split("#")[0];
+    const currentPageTitle = decodeURIComponent(location.pathname.replace("/wiki/", "")).split("#")[0];
 
     // Process current page title FIRST (priority for user experience)
     const processTitleAsync = async () => {
@@ -216,9 +216,9 @@
         if (!titleElement || titleElement.dataset.imdbProcessed) return;
         
         titleElement.dataset.imdbProcessed = "1";
-        const data = await getContentIdForPage(currentPage);
-        if (data) {
-            const rating = await getRating(data);
+        const tmdbData = await getContentDataForPageTitle(currentPageTitle);
+        if (tmdbData) {
+            const rating = await getRating(tmdbData);
             if (rating) addStarToTitle(titleElement, rating);
         }
     };
@@ -227,40 +227,40 @@
     processTitleAsync();
 
     // === LINKS PROCESSING ===
-    const linksByPage = new Map();
+    const linksByPageTitle = new Map();
     links.forEach((link) => {
         const href = link.getAttribute("href");
         if (!href || link.dataset.imdbProcessed) return;
         
-        let page = decodeURIComponent(href.replace("/wiki/", "")).split("#")[0];
+        let pageTitle = decodeURIComponent(href.replace("/wiki/", "")).split("#")[0];
         
         // Skip links that point to the current page
-        if (page === currentPage) return;
+        if (pageTitle === currentPageTitle) return;
         
         // Skip blacklisted pages early
-        if (isBlacklisted(page)) return;
+        if (isBlacklisted(pageTitle)) return;
         
-        if (!linksByPage.has(page)) {
-            linksByPage.set(page, []);
+        if (!linksByPageTitle.has(pageTitle)) {
+            linksByPageTitle.set(pageTitle, []);
         }
-        linksByPage.get(page).push(link);
+        linksByPageTitle.get(pageTitle).push(link);
     });
 
     // Process each unique page asynchronously
-    Array.from(linksByPage.entries()).forEach(([page, pageLinks]) => {
+    Array.from(linksByPageTitle.entries()).forEach(([pageTitle, pageLinks]) => {
         pageLinks.forEach(link => link.dataset.imdbProcessed = "1");
 
         (async () => {
             try {
-                const data = await getContentIdForPage(page);
-                if (!data) return;
+                const tmdbData = await getContentDataForPageTitle(pageTitle);
+                if (!tmdbData) return;
                 
-                const rating = await getRating(data);
+                const rating = await getRating(tmdbData);
                 if (!rating) return;
                 
                 pageLinks.forEach(link => addStar(link, rating));
             } catch (error) {
-                console.warn("[WikIMDb] Error processing page:", page);
+                console.warn("[WikIMDb] Error processing page:", pageTitle);
             }
         })();
     });
