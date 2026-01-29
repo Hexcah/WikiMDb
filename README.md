@@ -10,7 +10,7 @@
   ![Firefox Add-ons](https://img.shields.io/badge/Firefox-Install-FF7139?style=for-the-badge&logo=firefox&logoColor=white)
   ![Edge Add-ons](https://img.shields.io/badge/Edge-Install-0078D4?style=for-the-badge&logo=microsoftedge&logoColor=white)
   
-  ![Version](https://img.shields.io/badge/version-0.8.1-brightgreen)
+  ![Version](https://img.shields.io/badge/version-0.8.2-brightgreen)
   ![License](https://img.shields.io/badge/license-MIT-blue)
 </div>
 

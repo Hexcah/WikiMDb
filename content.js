@@ -21,7 +21,7 @@
     }
 
     // === CACHE SYSTEM ===
-    const CACHE_KEY = "wikimdb_cache_v_0_8_1";
+    const CACHE_KEY = "wikimdb_cache_v_0_8_2";
     let cache = {};
 
     try {
